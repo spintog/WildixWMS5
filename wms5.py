@@ -1,3 +1,9 @@
+import jwt
+import time
+import hashlib
+import requests
+from urllib.parse import quote
+
 class Client():
     """
     A class used connect and interact with Wildix WMS5 API.
@@ -93,3 +99,88 @@ class Client():
             self._pbx_host = pbx_host
         else:
             raise ValueError("APP Name not found. Verify config parameters")
+
+    def __generate_request_string(self, options):
+        """
+        Method to generate request string. Used on JWT creation.
+
+        Order parmaters is important on request estring generation
+        """
+
+        # Check if "url" parameter is in options. If not, script finishes
+        if "url" in options.keys():
+            request_string = "{}{}host:{};x-app-id:{};".format(
+                    self.__method,
+                    options["url"],
+                    self.host,
+                    self.app_id,
+                )
+        else:
+            raise ValueError("Query URL not found")
+
+        # Check if "count" parameter is in options to add on request string
+        if "count" in options.keys() and options["count"]:
+            request_string += "count:{};".format(options["count"])
+        
+        # Check if "field" parameter is in options to add on request string
+        if "fields" in options.keys():
+                request_string += "fields:{};".format(options["fields"])
+        
+        # Check if "start" parameter is in options to add on request string
+        if "start" in options.keys() and options["start"]:
+            request_string += "start:{};".format(options["start"])
+
+        return request_string
+    
+    def __generate_jwt(self, request_string):
+        """
+        Method to create Jasen Web Tocken to authenticate with Wildix PBX
+        """
+
+        hash_string = hashlib.sha256(request_string.encode())
+        timestamp = round(time.time())
+        expire = 1*60
+
+        payload = {
+            'iss': self.app_name,
+            'iat': timestamp,
+            'exp': timestamp + expire,
+            'sign': {
+                'alg': 'sha256',
+                'headers': {
+                        '0': 'Host',
+                        '1': 'X-APP-ID',
+                },
+                'hash': hash_string.hexdigest(),
+            },
+        }
+
+        encoded_jwt = jwt.encode(payload, self.secret, algorithm='HS256')
+        return encoded_jwt
+    
+    def __encode_url(self, options):
+        """
+        Method to create the URL that will send to PBX.
+        """
+        url = "https://" + self.host + options["url"] + "?"
+        if "count" in options.keys() and options["count"]:
+            url += "count={}".format(options["count"])
+        
+        if options["fields"]:
+            url += "&fields=" + options["fields"]
+        
+        if "start" in options.keys() and options["start"]:
+            url += "&start={}".format(options["start"])
+
+        return url
+
+    def query_get(self, options):
+        """
+        Method to query WMS API through GET method.
+        """
+        self.__method = "GET"
+        request_string = self.__generate_request_string(options)
+        jwt = self.__generate_jwt(request_string).decode()
+        head = {'Host': self.host, 'X-APP-ID': self.app_id, 'Authorization': 'Bearer {}'.format(jwt)}
+        url = self.__encode_url(options)
+        return requests.get(url, headers = head)
