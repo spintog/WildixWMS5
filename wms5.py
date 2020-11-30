@@ -134,7 +134,7 @@ class Client():
     
     def __generate_jwt(self, request_string):
         """
-        Method to create Jasen Web Tocken to authenticate with Wildix PBX
+        Method to create Jason Web Tocken to authenticate with Wildix PBX
         """
 
         hash_string = hashlib.sha256(request_string.encode())
