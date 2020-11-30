@@ -8,7 +8,7 @@ This python module is used to send HTTP requests to the new WMS5 API and integra
 ```python
 config = {
     "pbx_secret_key": "Secret",
-    "x_app_id": "app-id",
+    "app_id": "app-id",
     "app_name": "app-name",
     "pbx_host": "your_pbx.wildixin.com"
 }
