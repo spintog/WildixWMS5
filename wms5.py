@@ -82,3 +82,14 @@ class Client():
             self._app_name = app_name
         else:
             raise ValueError("APP Name not found. Verify config parameters")
+
+    @property
+    def pbx_host(self):
+        return self._pbx_host
+    
+    @pbx_host.setter
+    def pbx_host(self, pbx_host):
+        if pbx_host:
+            self._pbx_host = pbx_host
+        else:
+            raise ValueError("APP Name not found. Verify config parameters")
