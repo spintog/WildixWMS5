@@ -211,7 +211,4 @@ class Client():
 
         post_url = "https://{}{}".format(self.host, self.__url)
         
-        print(request_string)
-        print()
-        print(url)
         return requests.post(post_url, data=options, headers = head)
