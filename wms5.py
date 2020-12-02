@@ -192,3 +192,26 @@ class Client():
         url = self.__encode_url(options)
         
         return requests.get(url, headers = head)
+
+    def query_post(self, url, options):
+        """
+        Method to query WMS API through POST method.
+        """
+        self.__method = "POST"
+        self.__url = url
+
+        # Call method to generate request string
+        request_string = self.__generate_request_string(options)
+
+        # Call method to generate JWT using request string
+        jwt = self.__generate_jwt(request_string).decode()
+
+        # Generate headers used on get request
+        head = {'Host': self.host, 'X-APP-ID': self.app_id, 'Authorization': 'Bearer {}'.format(jwt)}
+
+        post_url = "https://{}{}".format(self.host, self.__url)
+        
+        print(request_string)
+        print()
+        print(url)
+        return requests.post(post_url, data=options, headers = head)
