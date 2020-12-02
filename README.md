@@ -16,10 +16,10 @@ config = {
 client = Client(config)
 ```
 
-### Send HTTP request with get method
-This method will generate the request string and JWT used to validate the client. Then, the client will query to WMS5 API.
-The result will be in json format.
-More API examples in https://www.wildix.com/wp-content/wms-api/
+### Send HTTP request with GET method
+This example gets call history from PBX for all users.
+
+API Documentation in https://www.wildix.com/wp-content/wms-api/
 ```python
 
 //example params
@@ -36,5 +36,20 @@ options = {
     }
 }
 
-query_result = pbx_connection.query_get(options)
+query_result = pbx_connection.query_get("/api/v1/PBX/Colleagues/", options)
+```
+
+### Send HTTP request with POST method
+This example create a new Colleague.
+
+API Documentation in https://www.wildix.com/wp-content/wms-api/
+```python
+
+//example params
+options = {
+    "number": 1237,
+    "name": "TestUser",
+}
+
+query_result = pbx_connection.query_post("/api/v1/PBX/Colleagues/", options)
 ```
