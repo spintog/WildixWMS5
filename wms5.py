@@ -107,28 +107,23 @@ class Client():
         Order parmaters is important on request estring generation
         """
 
-        # Check if "url" parameter is in options. If not, script finishes
-        if "url" in options.keys():
-            request_string = "{}{}host:{};x-app-id:{};".format(
+        # It seeams that wildix API needs params sorted to work correctly
+        options_sorted = dict(sorted(options.items(), key=lambda item: item[0]))
+
+        # Create bas request string. This part is common for all API requests
+        request_string = "{}{}host:{};x-app-id:{};".format(
                     self.__method,
-                    options["url"],
+                    self.__url,
                     self.host,
                     self.app_id,
                 )
-        else:
-            raise ValueError("Query URL not found")
-
-        # Check if "count" parameter is in options to add on request string
-        if "count" in options.keys() and options["count"]:
-            request_string += "count:{};".format(options["count"])
         
-        # Check if "field" parameter is in options to add on request string
-        if "fields" in options.keys():
-                request_string += "fields:{};".format(options["fields"])
-        
-        # Check if "start" parameter is in options to add on request string
-        if "start" in options.keys() and options["start"]:
-            request_string += "start:{};".format(options["start"])
+        # Check options passed and generate custom request string
+        for item in options_sorted.items():
+            if isinstance(item[1], dict):
+                pass
+            else:
+                request_string += "{}:{};".format(item[0], item[1])
 
         return request_string
     
@@ -162,25 +157,38 @@ class Client():
         """
         Method to create the URL that will send to PBX.
         """
-        url = "https://" + self.host + options["url"] + "?"
-        if "count" in options.keys() and options["count"]:
-            url += "count={}".format(options["count"])
-        
-        if options["fields"]:
-            url += "&fields=" + options["fields"]
-        
-        if "start" in options.keys() and options["start"]:
-            url += "&start={}".format(options["start"])
+        options_sorted = dict(sorted(options.items(), key=lambda item: item[0]))
+        current_option = 1
+        url = "https://" + self.host + self.__url + "?"
+
+        for items in options_sorted.items():
+            if isinstance(items[1], dict):
+                pass
+            else:
+                if current_option == len(options_sorted):
+                    url += "{}={}".format(items[0], items[1])
+                else:
+                    url += "{}={}&".format(items[0], items[1])
 
         return url
 
-    def query_get(self, options):
+    def query_get(self, url, options):
         """
         Method to query WMS API through GET method.
         """
         self.__method = "GET"
+        self.__url = url
+
+        # Call method to generate request string
         request_string = self.__generate_request_string(options)
+
+        # Call method to generate JWT using request string
         jwt = self.__generate_jwt(request_string).decode()
+
+        # Generate headers used on get request
         head = {'Host': self.host, 'X-APP-ID': self.app_id, 'Authorization': 'Bearer {}'.format(jwt)}
+
+        # Encode URL to be send to Wildix API
         url = self.__encode_url(options)
+        
         return requests.get(url, headers = head)
